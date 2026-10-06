@@ -287,9 +287,14 @@
     var rowH = first.offsetHeight;
     var gap = parseFloat(getComputedStyle(rail).rowGap);
     if (isNaN(gap)) gap = 24;
-    var gaps = Math.ceil(GRID_ROWS - 1);   /* 露出第三行的一角，第二、三行之间的间距也算进去 */
     var cs = getComputedStyle(rail);
     var pad = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+    /* 只剩一张卡时，柜子就贴合内容高度：不然下面会拖一大片空白 */
+    if (rail.querySelectorAll('.card:not(.hidden)').length <= 1) {
+      rail.style.maxHeight = (rowH + pad).toFixed(1) + 'px';
+      return;
+    }
+    var gaps = Math.ceil(GRID_ROWS - 1);   /* 露出第三行的一角，第二、三行之间的间距也算进去 */
     var want = rowH * GRID_ROWS + gap * gaps + pad;   /* max-height 是含内边距的，要算进去 */
     /* 高度不足的屏幕上退而求其次：容器贴着视口底，至少保证一行半的展示。
        页脚是 fixed 的，常驻占住底部，柜底正好落在页脚上缘（留 2px 呼吸） */
