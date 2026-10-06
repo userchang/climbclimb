@@ -92,7 +92,7 @@
       /* 面板刚从 display:none 显形，几何要重算一次，
          否则两侧的缩小虚化还是上一次的量（陈列模式则是行高算不出来） */
       if (rail && panel.contains(rail)) {
-        if (isGrid()) syncGrid(); else { syncPad(); rail.scrollLeft = 0; fx(); }
+        syncGrid();
       }
     });
   }
@@ -227,19 +227,9 @@
   var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
   var rail = document.getElementById('rail');
   var empty = document.getElementById('empty');
-  var workPanel = document.getElementById('work');
-  var viewBtn = document.getElementById('view-toggle');
-
-  /* 作品区两种视图并存，可随时切换（coverflow 那套代码完整保留）：
-       grid = 陈列：每行 4 个，露出 2.3 行，纵向滚动
-       rail = 轨道：横向 coverflow，两侧缩小转向 */
-  var view = 'grid';
-  try {
-    var savedView = localStorage.getItem('cc-view');
-    if (savedView === 'grid' || savedView === 'rail') view = savedView;
-  } catch (e) {}
-  function isGrid() { return view === 'grid'; }
-
+  /* 作品区只有陈列模式：横向 coverflow 的「轨道模式」已移除。
+     老版本存过的视图偏好顺手清掉，免得留着误导 */
+  try { localStorage.removeItem('cc-view'); } catch (e) {}
   function apply(cat) {
     var shown = 0;
     cards.forEach(function (c) {
@@ -248,11 +238,7 @@
       if (hit) shown += 1;
     });
     if (empty) empty.hidden = shown !== 0;
-    if (rail) {
-      stopGlide();
-      if (isGrid()) { rail.scrollTop = 0; syncGrid(); }
-      else { syncPad(); rail.scrollLeft = 0; fx(); }
-    }
+    if (rail) { rail.scrollTop = 0; syncGrid(); }
   }
 
   chips.forEach(function (chip) {
@@ -262,34 +248,6 @@
       apply(chip.getAttribute('data-cat'));
     });
   });
-
-  /* ---------- 作品：滚轮横滑 + 两侧缩小虚化 ---------- */
-  var railCards = rail ? Array.prototype.slice.call(rail.querySelectorAll('.card')) : [];
-
-  /* 惯性引擎：滚轮和按钮只累加目标值，rAF 逐帧逼近。
-     直接改 scrollLeft 是一跳一跳的，逐帧逼近才有滑行的手感 */
-  var glideTo = null, glideRaf = null, slideEnd = null, fxTick = false;
-
-  function railMax() { return rail ? rail.scrollWidth - rail.clientWidth : 0; }
-  function clampLeft(v) { return Math.max(0, Math.min(railMax(), v)); }
-
-  function stopGlide() {
-    if (glideRaf !== null) { cancelAnimationFrame(glideRaf); glideRaf = null; }
-    glideTo = null;
-  }
-
-  function glide() {
-    if (reduce) { rail.scrollLeft = glideTo; glideRaf = null; return; }
-    var diff = glideTo - rail.scrollLeft;
-    if (Math.abs(diff) < 0.6) { rail.scrollLeft = glideTo; glideRaf = null; return; }
-    rail.scrollLeft += diff * 0.18;
-    glideRaf = requestAnimationFrame(glide);
-  }
-
-  function push(delta) {
-    glideTo = clampLeft((glideTo === null ? rail.scrollLeft : glideTo) + delta);
-    if (glideRaf === null) glideRaf = requestAnimationFrame(glide);
-  }
 
   /* ---------- 后三个营地：内容下移到「对应标签往下半个」的位置 ----------
      左栏的四个营地是竖排的，第二/三/四个各自往下挪一档，
@@ -317,26 +275,11 @@
     });
   }
 
-  /* 首屏居中：左右各垫「半个可视宽 - 半张卡」，
-     这样 scrollLeft = 0 时第一张卡正好在正中，且最后一张也能滚到正中。
-     垫的是 padding —— 它是滚动内容的一部分，不会挡住卡片 */
-  function syncPad() {
-    if (!rail || isGrid()) return;     /* 陈列模式不需要两侧留白 */
-    var first = rail.querySelector('.card:not(.hidden)');
-    if (!first) return;
-    var w = first.offsetWidth;            /* offsetWidth 不受 transform 影响 */
-    var pad = Math.max(32, (rail.clientWidth - w) / 2);
-    rail.style.paddingLeft = pad.toFixed(1) + 'px';
-    rail.style.paddingRight = pad.toFixed(1) + 'px';
-  }
-
-  /* ---------- 视图切换：陈列 ⇄ 轨道 ---------- */
-
   /* 陈列柜一次露出的行数：2.3 —— 两整行 + 第三行露出三成，
      既暗示「下面还有」，又给每张卡留出放大的空间（行数少了，行就高了） */
   var GRID_ROWS = 2.3;
   function syncGrid() {
-    if (!rail || !isGrid()) return;
+    if (!rail) return;
     if (!rail.offsetParent) return;       /* 面板还藏着，量不到高度 */
     var first = rail.querySelector('.card:not(.hidden)');
     if (!first) return;
@@ -355,105 +298,12 @@
     rail.style.maxHeight = Math.max(Math.min(want, avail), rowH * 1.6 + gap).toFixed(1) + 'px';
   }
 
-  /* 切到陈列时把 coverflow 写在 inline 上的那几个变量清掉，
-     免得哪天 CSS 的 !important 失效就露馅 */
-  function clearFx() {
-    railCards.forEach(function (c) {
-      var inner = c.querySelector('.card-inner');
-      if (!inner) return;
-      ['--sc', '--scb', '--tx', '--tz', '--py', 'opacity'].forEach(function (p) {
-        inner.style.removeProperty(p);
-      });
-      c.style.removeProperty('z-index');
-    });
-  }
-
-  function setView(v) {
-    if (v !== 'grid' && v !== 'rail') return;
-    view = v;
-    var g = v === 'grid';
-    stopGlide();
-    rail.classList.toggle('grid', g);
-    if (workPanel) workPanel.classList.toggle('is-grid', g);
-    if (viewBtn) viewBtn.setAttribute('aria-label', g ? '切换为轨道模式' : '切换为陈列模式');
-
-    if (g) {
-      rail.style.paddingLeft = '';
-      rail.style.paddingRight = '';
-      clearFx();
-      rail.scrollTop = 0;
-      syncGrid();
-      if (prev) prev.hidden = true;
-      if (next) next.hidden = true;
-    } else {
-      rail.style.maxHeight = '';
-      rail.scrollTop = 0;
-      syncPad();
-      if (prev) prev.hidden = false;
-      if (next) next.hidden = false;
-      fx();
-    }
-    try { localStorage.setItem('cc-view', v); } catch (e) {}
-  }
-
-  /* 轨道上一张卡的间距（卡宽 + gap），用来把「离中心多远」换算成「几张卡」 */
-  function pitch() {
-    var first = rail.querySelector('.card:not(.hidden)');
-    var w = first ? first.offsetWidth : 320;
-    var gap = parseFloat(getComputedStyle(rail).columnGap);
-    if (isNaN(gap)) gap = parseFloat(getComputedStyle(rail).gap) || 24;
-    return w + gap;
-  }
-
-  /* 离轨道中心越远 → 越小、越淡、越往后退、越往里翻 */
-  function fx() {
-    if (!rail || !railCards.length) return;
-    if (isGrid()) return;                /* 陈列模式不做缩放/转向/淡出 */
-    var rr = rail.getBoundingClientRect();
-    var centerX = rr.left + rr.width / 2;
-    var unit = pitch();
-
-    for (var i = 0; i < railCards.length; i++) {
-      var c = railCards[i];
-      if (c.classList.contains('hidden')) continue;
-      var inner = c.querySelector('.card-inner');
-      if (!inner) continue;
-
-      var cr = c.getBoundingClientRect();
-      /* 用外层 .card 量，它不带 --tx 变换，所以不会自己反馈给自己 */
-      var offset = (cr.left + cr.width / 2) - centerX;
-      var raw = offset / unit;              /* 以「第几张」为单位，可正可负 */
-      var ar = Math.abs(raw);
-      var sign = raw < 0 ? -1 : 1;
-
-      /* 缩放走指数衰减：1.04 → 0.75 → 0.66 → 0.63 …
-         线性衰减做不到「第一档掉得多、之后快速收敛」，指数正好是这个形状。
-         fall：正中 1，相邻 0.31，第二张 0.096 —— 越小表示离得越远 */
-      var fall = Math.pow(0.31, ar);
-      var sc = 0.62 + 0.42 * fall;
-      var d = 1 - fall;                     /* 深度因子：正中 0 → 远处趋近 1 */
-
-      /* 向中心收拢只留 8%：两侧卡缩放后的半宽 + 中心卡半宽 恒小于一个 pitch，
-         所以永远不会叠到中心卡上（实测相邻间隙约 30px） */
-      var tx = -offset * 0.08;
-
-      inner.style.setProperty('--sc', sc.toFixed(3));
-      inner.style.setProperty('--scb', sc.toFixed(3));   /* 悬停放大用的基准值 */
-      inner.style.setProperty('--tz', (-100 * d).toFixed(1) + 'px');
-      inner.style.setProperty('--tx', tx.toFixed(1) + 'px');
-      inner.style.setProperty('--py', (sign * 26 * d).toFixed(2) + 'deg');
-      inner.style.opacity = (0.45 + 0.55 * fall).toFixed(3);
-      c.style.zIndex = String(60 - Math.round(d * 40));  /* 正中那张盖在上面 */
-    }
-  }
-
+  /* 滚动时临时关掉过渡，免得 hover 放大动画跟滚动打架 */
+  var slideEnd = null;
   function onRailScroll() {
     rail.classList.add('is-sliding');
     clearTimeout(slideEnd);
     slideEnd = setTimeout(function () { rail.classList.remove('is-sliding'); }, 140);
-    if (fxTick) return;
-    fxTick = true;
-    requestAnimationFrame(function () { fxTick = false; fx(); });
   }
 
   /* 滚动是功能，不受「减少动效」门控 —— 之前写成 !reduce，
@@ -462,73 +312,8 @@
     rail.addEventListener('scroll', onRailScroll, { passive: true });
     window.addEventListener('resize', function () {
       syncLead();
-      if (isGrid()) syncGrid(); else { syncPad(); fx(); }
+      syncGrid();
     });
-  }
-
-  /* 滚轮绑在整个 window 上：进入作品层后，整页任意位置滚动都横向推轨道，
-     不用把光标精准放进那个卡片框里。
-     只在「当前是作品层」且「轨道还有余量」时接管，否则把滚动权还给页面 */
-  window.addEventListener('wheel', function (e) {
-    if (state !== 'work' || !rail) return;
-    if (isGrid()) return;                /* 陈列模式交给容器原生纵向滚动 */
-    var max = railMax();
-    if (max <= 1) return;
-    /* 竖向滚轮也能横着滑；触控板横向手势优先 */
-    var d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    if (!d) return;
-    if (e.deltaMode === 1) d *= 16;          /* 按行滚动的老鼠标 */
-    else if (e.deltaMode === 2) d *= 100;    /* 按页 */
-    var cur = glideTo === null ? rail.scrollLeft : glideTo;
-    /* 到头就把滚动权交还页面，别把人困在轨道里 */
-    if ((d < 0 && cur <= 0.5) || (d > 0 && cur >= max - 0.5)) return;
-    e.preventDefault();
-    push(d * 1.1);
-  }, { passive: false });
-
-  /* ---------- 作品：轨道左右翻 ---------- */
-  var prev = document.getElementById('rail-prev');
-  var next = document.getElementById('rail-next');
-
-  function step(dir) {
-    if (!rail) return;
-    var d = dir * pitch();          /* 一次挪一张，配合居中更好控制 */
-    if (reduce) { rail.scrollLeft = clampLeft(rail.scrollLeft + d); return; }
-    push(d);
-  }
-  if (prev) prev.addEventListener('click', function () { step(-1); });
-  if (next) next.addEventListener('click', function () { step(1); });
-
-  /* ---------- 作品：鼠标拖拽 ---------- */
-  if (rail) {
-    var down = false, startX = 0, startLeft = 0, moved = 0;
-
-    rail.addEventListener('pointerdown', function (e) {
-      if (e.pointerType === 'touch') return;
-      if (isGrid()) return;              /* 陈列模式不拖拽横滑 */
-      down = true; moved = 0;
-      stopGlide();                 /* 手一按下就接管，别和惯性抢 scrollLeft */
-      startX = e.clientX;
-      startLeft = rail.scrollLeft;
-      rail.classList.add('dragging');
-    });
-    rail.addEventListener('pointermove', function (e) {
-      if (!down) return;
-      var dx = e.clientX - startX;
-      moved = Math.abs(dx);
-      rail.scrollLeft = startLeft - dx;
-    });
-    function release() {
-      if (!down) return;
-      down = false;
-      rail.classList.remove('dragging');
-    }
-    rail.addEventListener('pointerup', release);
-    rail.addEventListener('pointerleave', release);
-    rail.addEventListener('pointercancel', release);
-    rail.addEventListener('click', function (e) {
-      if (moved > 6) { e.preventDefault(); e.stopPropagation(); }
-    }, true);
   }
 
   /* ---------- 卡片入场：错落浮现 ---------- */
@@ -568,13 +353,8 @@
     });
   }
 
-  /* ---------- 视图切换按钮 ---------- */
-  if (viewBtn && rail) {
-    viewBtn.addEventListener('click', function () {
-      setView(isGrid() ? 'rail' : 'grid');
-    });
-    setView(view);          /* 面板此时还藏着，几何计算会在进层时补做 */
-  }
+  /* 进场先把陈列柜高度算一次（面板显形前量不到，light() 里还会再算一次） */
+  if (rail) syncGrid();
 
   /* ---------- 页脚年份 ---------- */
   var year = document.getElementById('year');

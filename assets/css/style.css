@@ -405,53 +405,13 @@ section { padding: var(--s9) 0; }
 .chip:hover { border-color: var(--line-2); color: var(--ink); }
 .chip.is-on { background: var(--ink); border-color: var(--ink); color: #F1F7F7; }
 
-.rail-nav { margin-left: auto; display: flex; gap: var(--s2); }
-.icon-btn {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: color .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
-}
-.icon-btn svg { width: 20px; height: 20px; }
-.icon-btn:hover { border-color: var(--ink); color: var(--ink); background: var(--surface-solid); }
-/* display:grid 会盖掉 [hidden]，陈列模式下藏 ‹ › 时靠这条 */
-.icon-btn[hidden] { display: none; }
-
-/* ---------- 作品：横向卡片轨道 ---------- */
+/* ---------- 作品：陈列柜（网格，每行 4 个，露出 2.3 行，纵向滚动） ----------
+   原本还有一套横向 coverflow 的「轨道模式」，已按需求删除，只留陈列 */
 .rail {
-  display: flex;
-  gap: var(--s5);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  /* 不能用 scroll-snap：惯性滚动是逐帧改 scrollLeft 的，浏览器会把每一帧
-     当成一次滚动操作结束并立刻吸附回卡片起点，结果就是完全滚不动。
-     聚焦感由 JS 的缩放/淡出负责，不靠吸附 */
-  scrollbar-width: none;
-  margin-inline: calc(var(--s6) * -1);
-  padding: var(--s5) var(--s6) var(--s7);
-  cursor: grab;
-}
-.rail::-webkit-scrollbar { display: none; }
-.rail.dragging { cursor: grabbing; scroll-snap-type: none; }
-
-.card {
-  flex: 0 0 clamp(268px, 30vw, 340px);
-  display: block;
-  perspective: 900px;
-}
-
-/* ---------- 作品：陈列模式（网格，每行 4 个，露出 2.3 行，纵向滚动） ---------- */
-.rail.grid {
   display: grid;
   grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
   gap: var(--s5) var(--s3);
-  /* 横向的 coverflow 交给了轨道模式，这里改成纵向滚动的陈列柜 */
+  /* 纵向滚动的陈列柜；横向滚动条彻底关掉 */
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -463,24 +423,27 @@ section { padding: var(--s9) 0; }
   cursor: default;
   scrollbar-width: none;
 }
-.rail.grid::-webkit-scrollbar { display: none; }
-.rail.grid .card { flex: none; }
-/* 陈列模式不做任何 coverflow 形变。--sc/--tx/--tz/--py/opacity 都是
-   JS 写在 inline style 上的，这里必须 !important 才盖得住 */
-.rail.grid .card-inner {
+.rail::-webkit-scrollbar { display: none; }
+
+.card {
+  display: block;
+  perspective: 900px;
+}
+/* 陈列不做任何形变：这几个变量原本是 coverflow 用 JS 写在 inline style 上的，
+   这里用 !important 兜底，确保任何残留都盖得住 */
+.rail .card-inner {
   --sc: 1 !important;
   --tx: 0px !important;
   --tz: 0px !important;
   --py: 0deg !important;
   opacity: 1 !important;
 }
-.rail.grid .card { z-index: auto !important; }
-/* 陈列模式只压一点点：行数是 2.3（不是 2.5），每行分摊到的高度更宽裕，
-   所以缩略图能回到 3:2、正文字号能回一档，卡片看着比轨道里的略小但不再局促 */
-.rail.grid .thumb { aspect-ratio: 3 / 2; }
-.rail.grid .card-body { padding: var(--s4); }
-.rail.grid .card h3 { font-size: 1.0625rem; margin-bottom: var(--s2); }
-.rail.grid .card p {
+.rail .card { z-index: auto !important; }
+/* 缩略图 3:2、正文回一档字号：行数 2.3 让每行高度更宽裕，卡片不再局促 */
+.rail .thumb { aspect-ratio: 3 / 2; }
+.rail .card-body { padding: var(--s4); }
+.rail .card h3 { font-size: 1.0625rem; margin-bottom: var(--s2); }
+.rail .card p {
   font-size: var(--text-sm);
   line-height: 1.6;
   margin-bottom: var(--s2);
@@ -489,16 +452,11 @@ section { padding: var(--s9) 0; }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* 网格里按列错落，而不是按第几张 */
-.rail.grid .card:nth-child(4n+1) { transition-delay: .04s; }
-.rail.grid .card:nth-child(4n+2) { transition-delay: .1s; }
-.rail.grid .card:nth-child(4n+3) { transition-delay: .16s; }
-.rail.grid .card:nth-child(4n+4) { transition-delay: .22s; }
-
-/* 视图切换按钮：陈列中显示「轨道」图标，轨道中显示「网格」图标 */
-#view-toggle .i-rail { display: none; }
-.is-grid #view-toggle .i-grid { display: none; }
-.is-grid #view-toggle .i-rail { display: block; }
+/* 入场按列错落，而不是按第几张 */
+.rail .card:nth-child(4n+1) { transition-delay: .04s; }
+.rail .card:nth-child(4n+2) { transition-delay: .1s; }
+.rail .card:nth-child(4n+3) { transition-delay: .16s; }
+.rail .card:nth-child(4n+4) { transition-delay: .22s; }
 
 .card-inner {
   height: 100%;
@@ -728,7 +686,7 @@ footer .wrap { pointer-events: auto; }
   /* 窄屏营地栏挪到内容上方横排，波浪线就没有「左侧标签」可引了，直接收掉 */
   .panel .lead,
   .panel .lead-plane { display: none; }
-  .rail.grid { --cols: 3; }
+  .rail { --cols: 3; }
 }
 
 @media (max-width: 640px) {
@@ -761,7 +719,7 @@ footer .wrap { pointer-events: auto; }
   }
   .mt-legend button:hover { color: var(--accent-deep); }
 
-  .rail.grid { --cols: 2; }
+  .rail { --cols: 2; }
 }
 
 /* ---------- 减少动效 ---------- */
