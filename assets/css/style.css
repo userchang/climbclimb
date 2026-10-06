@@ -1,0 +1,778 @@
+/* ============================================
+   爬爬顶小站 — 卡片式 / 分层动效
+   背景（蓝绿晕染）为锁定资产，勿改
+   ============================================ */
+
+:root {
+  --ink: oklch(23% 0.045 205);
+  --ink-2: oklch(38% 0.04 200);
+  --ink-3: oklch(48% 0.035 198);
+  --accent: oklch(50% 0.11 192);
+  --accent-deep: oklch(36% 0.09 200);
+  --line: oklch(56% 0.05 200 / 0.3);
+  --line-2: oklch(42% 0.05 200 / 0.5);
+  --surface: oklch(99% 0.012 195 / 0.5);
+  --surface-solid: oklch(99% 0.012 195 / 0.72);
+
+  /* 三级高度：卡片浮起来的层次 */
+  --elev-1: 0 1px 2px oklch(35% 0.04 200 / 0.06), 0 4px 12px oklch(35% 0.04 200 / 0.05);
+  --elev-2: 0 2px 4px oklch(35% 0.04 200 / 0.07), 0 10px 24px oklch(35% 0.04 200 / 0.07);
+  --elev-3: 0 4px 8px oklch(35% 0.04 200 / 0.08), 0 22px 48px oklch(35% 0.04 200 / 0.11);
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --display: clamp(3.25rem, 1.5rem + 8.5vw, 6.5rem);
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+  --s9: 96px;
+  --s10: 128px;
+
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+  /* 圆体一路：轻松、手作感，不用行楷/隶书这类正经书法体 */
+  --font-display: "YouYuan", "幼圆", "Yuanti SC", "圆体-简", "Yuppy SC",
+    "Hiragino Maru Gothic ProN", "PingFang SC", "Microsoft YaHei", sans-serif;
+
+  --wrap: 1160px;
+  --ease: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.75;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+
+  /* 锁定：蓝绿晕染的底色 */
+  background-color: #E2EEF0;
+}
+
+/* 锁定：蓝绿晕染渐变层
+   放独立 fixed 合成层，而不是 body 的 background-attachment: fixed
+   —— 后者每次重绘都要重算整屏渐变，是切换动画卡顿的主因 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1200px 820px at 4% -12%, rgba(40, 158, 200, 0.68), transparent 64%),
+    radial-gradient(1050px 760px at 96% 0%, rgba(56, 204, 152, 0.62), transparent 64%),
+    radial-gradient(1100px 950px at 62% 112%, rgba(96, 198, 190, 0.66), transparent 64%),
+    radial-gradient(820px 820px at 28% 52%, rgba(126, 186, 224, 0.46), transparent 68%),
+    radial-gradient(700px 700px at 88% 78%, rgba(150, 214, 176, 0.42), transparent 68%);
+  background-repeat: no-repeat;
+}
+
+a { color: inherit; text-decoration: none; }
+
+:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.wrap {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 var(--s6);
+}
+
+.skip { position: absolute; left: -9999px; }
+.skip:focus {
+  left: var(--s5);
+  top: var(--s4);
+  z-index: 20;
+  padding: var(--s2) var(--s4);
+  border: 1px solid var(--line-2);
+  border-radius: var(--s3);
+  background: var(--surface-solid);
+}
+
+/* ---------- 顶栏 ---------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* 不用 backdrop-filter：它是逐帧重算的模糊，切换时最拖帧
+     改成更实的半透明色，视觉几乎一样 */
+  background: oklch(99% 0.012 195 / 0.84);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  height: var(--s8);
+}
+.brand {
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  letter-spacing: .06em;
+}
+.nav-back {
+  margin-left: auto;
+  font-size: var(--text-sm);
+  letter-spacing: .14em;
+  color: var(--ink-3);
+  transition: color .25s var(--ease);
+}
+.nav-back:hover { color: var(--accent-deep); }
+
+/* ---------- 聚焦首屏：域名 + 一座可以点的山 ---------- */
+/* 切换期间浮起来的那一层：脱离文档流，好让另一层立刻就位，
+   两层交叉淡化，中间没有布局突变 */
+main { position: relative; }
+.peak.floating,
+.deck.floating {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+/* display:grid 会盖掉 [hidden] 的 display:none，必须显式补一条 */
+.peak[hidden] { display: none; }
+.peak {
+  display: grid;
+  place-items: center;
+  min-height: calc(100vh - var(--s8));
+  padding: var(--s8) 0 var(--s9);
+  transition: opacity .32s var(--ease);
+}
+.peak.leaving { opacity: 0; }
+.peak .wrap { text-align: center; }
+
+.peak-mark {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, .8rem + 5vw, 3.75rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: .015em;
+  margin: 0 0 var(--s6);
+}
+
+.mt { position: relative; max-width: 900px; margin: 0 auto; }
+.mt-svg { display: block; width: 100%; height: auto; }
+.mt-body { fill: oklch(99% 0.012 195 / 0.3); }
+.mt-ridge { stroke: var(--line-2); stroke-width: 1.5; stroke-linejoin: round; }
+.mt-line { stroke: var(--line-2); stroke-width: 1.2; stroke-linecap: round; }
+
+.camp {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.camp .dot {
+  width: clamp(40px, 5.4vw, 54px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  background: var(--surface-solid);
+  color: var(--ink-2);
+  box-shadow: var(--elev-1);
+  opacity: 0;
+  animation: camp-pop .6s var(--ease) forwards;
+  transition: border-color .3s var(--ease), color .3s var(--ease),
+    background .3s var(--ease), box-shadow .3s var(--ease);
+}
+.camp .dot svg {
+  width: 52%;
+  height: 52%;
+  transition: transform .3s var(--ease);
+}
+.camp .label {
+  font-size: var(--text-sm);
+  letter-spacing: .22em;
+  text-indent: .22em;
+  color: var(--ink-3);
+  opacity: 0;
+  animation: fade-in .6s var(--ease) forwards;
+  transition: color .3s var(--ease);
+}
+.camp:nth-of-type(1) .dot { animation-delay: .45s; }
+.camp:nth-of-type(2) .dot { animation-delay: .6s; }
+.camp:nth-of-type(3) .dot { animation-delay: .75s; }
+.camp:nth-of-type(4) .dot { animation-delay: .9s; }
+.camp:nth-of-type(1) .label { animation-delay: .57s; }
+.camp:nth-of-type(2) .label { animation-delay: .72s; }
+.camp:nth-of-type(3) .label { animation-delay: .87s; }
+.camp:nth-of-type(4) .label { animation-delay: 1.02s; }
+
+.camp:hover .dot,
+.camp:focus-visible .dot {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+  background: oklch(99% 0.012 195 / 0.94);
+  box-shadow: var(--elev-2);
+}
+.camp:hover .dot svg { transform: scale(1.16); }
+.camp:hover .label,
+.camp:focus-visible .label { color: var(--accent-deep); }
+
+@keyframes camp-pop {
+  from { opacity: 0; transform: translateY(10px) scale(.84); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mt-legend { display: none; }
+
+/* 逐层淡入 */
+.fade { animation: fade-in .9s var(--ease) both; }
+.peak-mark { animation-delay: .1s; }
+.mt { animation-delay: .35s; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+section { padding: var(--s9) 0; }
+.peak { padding: var(--s8) 0 var(--s9); }
+
+
+/* ---------- 层视图：左边营地栏 + 右边内容 ---------- */
+.deck {
+  /* 顶部 32px：层内容首屏要尽量多露一些（作品陈列的 2.3 行容器得落在一屏内） */
+  padding: var(--s6) 0 var(--s10);
+  transition: opacity .42s var(--ease), transform .42s var(--ease);
+}
+.deck[hidden] { display: none; }
+/* 只淡入内容区，左栏的营地不参与（它们正在飞）
+   position:relative 是给「正在离场的面板」做定位参照 */
+.deck-body {
+  position: relative;
+  opacity: 0;
+  transition: opacity .34s var(--ease) .05s;
+}
+.deck.in .deck-body { opacity: 1; }
+
+.deck-row {
+  display: grid;
+  grid-template-columns: 136px minmax(0, 1fr);
+  gap: var(--s7);
+  align-items: start;
+}
+.deck-nav {
+  position: sticky;
+  top: calc(var(--s8) + var(--s6));
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+/* 营地飞到左栏后的形态：图标 + 文字横排 */
+.deck-nav .camp {
+  position: static;
+  transform: none;
+  flex-direction: row;
+  gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  border-radius: var(--s7);
+  transition: background .3s var(--ease);
+}
+.deck-nav .camp .dot { opacity: 1; animation: none; box-shadow: none; }
+.deck-nav .camp .label { opacity: 1; animation: none; }
+.deck-nav .camp:hover { background: oklch(99% 0.012 195 / 0.38); }
+.deck-nav .camp.is-on { background: oklch(99% 0.012 195 / 0.62); }
+.deck-nav .camp.is-on .dot {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+  box-shadow: var(--elev-1);
+}
+.deck-nav .camp.is-on .label { color: var(--ink); }
+
+.panel { position: relative; display: none; padding: var(--s4) 0 0; }   /* 覆盖 section 的 96px 顶距，层内容不必再往下让 */
+.panel.is-on { display: block; animation: panel-in .34s var(--ease) both; }
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+/* 从左侧营地标签引出的手绘感波浪线：起点落在当前标签上，
+   贴着标签中心横向伸向内容区，末端停在第一张卡上方。
+   --lead-h 是 JS 量出的标签中心高度，线就落在那个高度上横着过去 */
+.panel .lead {
+  position: absolute;
+  left: calc(var(--s7) * -1 - 8px);
+  top: calc(var(--lead-h, 16px) - 13px);
+  width: calc(var(--s7) + 68px);
+  height: 24px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: .5;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* 波浪线末端的小纸飞机，朝右飞向内容。单独一个 svg 而不是画在 .lead 里：
+   .lead 是 preserveAspectRatio=none 拉伸的，画进去会被压扁 */
+.panel .lead-plane {
+  position: absolute;
+  left: 64px;                              /* 让开线末端，停在它右前方 */
+  top: calc(var(--lead-h, 16px) - 20px);   /* 比线略高一点，不贴着 */
+  width: 26px;
+  height: 26px;
+  transform: rotate(-2deg);                /* 机头只是略微上扬，别太翘 */
+  fill: oklch(99% 0.012 195 / 0.55);
+  stroke: var(--accent);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: .6;
+  pointer-events: none;
+}
+
+/* 层与层之间切换：旧面板浮起来淡出，新面板同时淡入，
+   不占位所以不会把新内容顶下去 */
+.panel.leaving {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  pointer-events: none;
+  animation: panel-out .3s var(--ease) forwards;
+}
+@keyframes panel-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(-12px); }
+}
+
+/* 进过一次层之后，营地不再重播入场动画（否则回首页要等 1s 才亮完） */
+.camp.settled .dot,
+.camp.settled .label { animation: none; opacity: 1; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- 控制条 ---------- */
+.rail-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  flex-wrap: wrap;
+  margin-bottom: var(--s5);
+}
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.chip {
+  min-height: 40px;
+  padding: 0 var(--s4);
+  font: inherit;
+  font-size: var(--text-sm);
+  letter-spacing: .1em;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  border-radius: var(--s8);
+  background: var(--surface);
+  cursor: pointer;
+  transition: color .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+}
+.chip:hover { border-color: var(--line-2); color: var(--ink); }
+.chip.is-on { background: var(--ink); border-color: var(--ink); color: #F1F7F7; }
+
+.rail-nav { margin-left: auto; display: flex; gap: var(--s2); }
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: color .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+}
+.icon-btn svg { width: 20px; height: 20px; }
+.icon-btn:hover { border-color: var(--ink); color: var(--ink); background: var(--surface-solid); }
+/* display:grid 会盖掉 [hidden]，陈列模式下藏 ‹ › 时靠这条 */
+.icon-btn[hidden] { display: none; }
+
+/* ---------- 作品：横向卡片轨道 ---------- */
+.rail {
+  display: flex;
+  gap: var(--s5);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* 不能用 scroll-snap：惯性滚动是逐帧改 scrollLeft 的，浏览器会把每一帧
+     当成一次滚动操作结束并立刻吸附回卡片起点，结果就是完全滚不动。
+     聚焦感由 JS 的缩放/淡出负责，不靠吸附 */
+  scrollbar-width: none;
+  margin-inline: calc(var(--s6) * -1);
+  padding: var(--s5) var(--s6) var(--s7);
+  cursor: grab;
+}
+.rail::-webkit-scrollbar { display: none; }
+.rail.dragging { cursor: grabbing; scroll-snap-type: none; }
+
+.card {
+  flex: 0 0 clamp(268px, 30vw, 340px);
+  display: block;
+  perspective: 900px;
+}
+
+/* ---------- 作品：陈列模式（网格，每行 4 个，露出 2.3 行，纵向滚动） ---------- */
+.rail.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+  gap: var(--s5) var(--s3);
+  /* 横向的 coverflow 交给了轨道模式，这里改成纵向滚动的陈列柜 */
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  /* 左右各往外借 32px、再垫回 16px 内边距：列宽不变，
+     但 hover 放大（≈1.13，每侧多出 ~15px）落在这圈内边距里，
+     不会被 overflow 裁出一条生硬的边。借的是 .wrap 自己的留白，不会出血 */
+  margin-inline: calc(var(--s6) * -1);
+  padding: var(--s5) var(--s4) var(--s5);
+  cursor: default;
+  scrollbar-width: none;
+}
+.rail.grid::-webkit-scrollbar { display: none; }
+.rail.grid .card { flex: none; }
+/* 陈列模式不做任何 coverflow 形变。--sc/--tx/--tz/--py/opacity 都是
+   JS 写在 inline style 上的，这里必须 !important 才盖得住 */
+.rail.grid .card-inner {
+  --sc: 1 !important;
+  --tx: 0px !important;
+  --tz: 0px !important;
+  --py: 0deg !important;
+  opacity: 1 !important;
+}
+.rail.grid .card { z-index: auto !important; }
+/* 陈列模式只压一点点：行数是 2.3（不是 2.5），每行分摊到的高度更宽裕，
+   所以缩略图能回到 3:2、正文字号能回一档，卡片看着比轨道里的略小但不再局促 */
+.rail.grid .thumb { aspect-ratio: 3 / 2; }
+.rail.grid .card-body { padding: var(--s4); }
+.rail.grid .card h3 { font-size: 1.0625rem; margin-bottom: var(--s2); }
+.rail.grid .card p {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  margin-bottom: var(--s2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* 网格里按列错落，而不是按第几张 */
+.rail.grid .card:nth-child(4n+1) { transition-delay: .04s; }
+.rail.grid .card:nth-child(4n+2) { transition-delay: .1s; }
+.rail.grid .card:nth-child(4n+3) { transition-delay: .16s; }
+.rail.grid .card:nth-child(4n+4) { transition-delay: .22s; }
+
+/* 视图切换按钮：陈列中显示「轨道」图标，轨道中显示「网格」图标 */
+#view-toggle .i-rail { display: none; }
+.is-grid #view-toggle .i-grid { display: none; }
+.is-grid #view-toggle .i-rail { display: block; }
+
+.card-inner {
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface-solid);
+  box-shadow: var(--elev-1);
+  transform-style: preserve-3d;
+  /* JS 按「离轨道中心多远」写这几个变量：
+       --tx  向中心收拢（做出贴近感）
+       --tz  沿 Z 轴后退（纵深）
+       --py  绕 Y 轴转向，外侧边缘往里翻（coverflow 的翻页感）
+       --sc  缩放            --rx/--ry 鼠标倾斜
+     顺序：平移（不吃缩放）→ 缩放 → 转向 → 倾斜 */
+  transform: translateX(var(--tx, 0px))
+             translateY(var(--lift, 0px))
+             translateZ(var(--tz, 0px))
+             scale(var(--sc, 1))
+             rotateY(var(--py, 0deg))
+             rotateX(var(--rx, 0deg))
+             rotateY(var(--ry, 0deg));
+  transition: transform .55s var(--ease), opacity .3s var(--ease),
+              box-shadow .55s var(--ease), border-color .4s var(--ease);
+}
+/* 滚动期间关掉 transform 过渡，否则缩放会慢半拍、不跟手；
+   松手 140ms 后恢复，hover 抬升和倾斜的过渡照旧 */
+.rail.is-sliding .card-inner { transition: none; }
+/* 虚化只加在两侧的卡上（JS 按距离写 inline filter），
+   中心卡保持 filter 为空 —— filter 会 flatten 后代的 preserve-3d */
+/* 鼠标停在两侧的卡上时恢复清晰和原尺寸，否则淡着没法看。
+   必须 !important：--sc 和 opacity 都是 JS 写在 inline style 上的 */
+.rail .card:hover .card-inner,
+.rail .card:focus-within .card-inner {
+  /* 按各自的基准放大一点、拉回 Z 轴、摆正 —— 但不能大到压过中间那张。
+     --scb 是 JS 写下的「当前距离对应的基准缩放」，中心卡 1.04 封顶 */
+  --sc: min(1.04, calc(var(--scb, 1) * 1.13)) !important;
+  --tz: 0px !important;
+  --py: 0deg !important;
+  opacity: 1 !important;
+}
+/* 刻意不提 z-index：层级仍由 JS 按距离给，中间那张永远在上面，
+   侧卡放大后只是从它后面露出更多，不会盖上去 */
+.card:hover .card-inner {
+  --lift: -8px;
+  box-shadow: var(--elev-3);
+  border-color: var(--line-2);
+}
+.card.tilting .card-inner {
+  transition: transform .12s linear, box-shadow .55s var(--ease), border-color .4s var(--ease);
+}
+.thumb {
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 19px 19px 0 0;
+  border-bottom: 1px solid var(--line);
+  background-image: repeating-linear-gradient(135deg, var(--line) 0 1px, transparent 1px 11px);
+  transform: translateZ(8px);
+}
+.thumb span {
+  font-size: var(--text-xs);
+  letter-spacing: .18em;
+  color: var(--ink-3);
+  background: oklch(99% 0.012 195 / 0.85);
+  padding: var(--s1) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--s8);
+}
+
+.card-body {
+  padding: var(--s5);
+  transform: translateZ(16px);
+}
+.card h3 {
+  font-size: var(--text-lg);
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0 0 var(--s2);
+  transition: color .25s var(--ease);
+}
+.card:hover h3 { color: var(--accent-deep); }
+.card p {
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  color: var(--ink-3);
+  margin: 0 0 var(--s3);
+}
+.stamp {
+  display: block;
+  font-size: var(--text-xs);
+  letter-spacing: .18em;
+  color: var(--ink-3);
+  opacity: .9;
+}
+.card-sm .card-body p { margin: var(--s2) 0 0; font-size: var(--text-base); color: var(--ink-2); }
+
+.card.hidden { display: none; }
+
+/* 入场：错落浮现（错落用 transition-delay，不用一堆 setTimeout，省掉反复重排） */
+.card {
+  opacity: 0;
+  transform: translateY(30px) scale(.985);
+  transition: opacity .6s var(--ease), transform .6s var(--ease);
+}
+.card.in { opacity: 1; transform: none; }
+.rail .card:nth-child(1) { transition-delay: .12s; }
+.rail .card:nth-child(2) { transition-delay: .19s; }
+.rail .card:nth-child(3) { transition-delay: .26s; }
+.rail .card:nth-child(4) { transition-delay: .33s; }
+.rail .card:nth-child(5) { transition-delay: .40s; }
+.rail .card:nth-child(6) { transition-delay: .47s; }
+.grid-sm .card:nth-child(2) { transition-delay: .07s; }
+.grid-sm .card:nth-child(3) { transition-delay: .14s; }
+
+.empty {
+  margin: var(--s6) 0 0;
+  font-size: var(--text-sm);
+  letter-spacing: .08em;
+  color: var(--ink-3);
+}
+
+/* ---------- 在玩 / 找我：小卡片网格 ---------- */
+.grid-sm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--s5);
+}
+.grid-sm .card { flex: none; }
+
+/* ---------- 痕迹 ---------- */
+.trace-list { list-style: none; margin: 0; padding: 0; }
+.trace-list li { position: relative; padding: 0 0 var(--s7) var(--s7); }
+.trace-list li:last-child { padding-bottom: 0; }
+.seed {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  opacity: .55;
+  border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+}
+.trace-list .year {
+  font-size: var(--text-xs);
+  letter-spacing: .24em;
+  color: var(--ink-3);
+  margin-bottom: var(--s1);
+}
+.trace-list h3 { font-size: var(--text-lg); font-weight: 500; margin: 0 0 var(--s1); }
+.trace-list p {
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  color: var(--ink-3);
+  margin: 0;
+  max-width: 52ch;
+}
+
+/* ---------- 我：链接 ---------- */
+.links { list-style: none; margin: 0; padding: 0; }
+.links li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s5);
+  padding: var(--s4) 0;
+  border-top: 1px solid var(--line);
+}
+.links li:last-child { border-bottom: 1px solid var(--line); }
+.links span {
+  flex: 0 0 auto;
+  min-width: 5em;
+  font-size: var(--text-xs);
+  letter-spacing: .22em;
+  color: var(--ink-3);
+}
+.links a {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  letter-spacing: .04em;
+  transition: color .25s var(--ease);
+}
+.links a:hover { color: var(--accent-deep); }
+
+/* ---------- 页脚 ---------- */
+/* 页脚钉死在视口底：各面板内容高度不一，留在文档流里
+   切换标签时它会跟着跳。fixed 之后永远贴底不动 */
+footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  border-top: 1px solid var(--line);
+  /* 文字偏上：上留白收紧到 8px，下留白 32px（原来的 2 倍），整块贴着视口底 */
+  padding: var(--s2) var(--s6) var(--s6);
+  /* 文字直接浮在晕染上，不用底色，和现在的视觉一致 */
+  pointer-events: none;
+}
+footer .wrap { pointer-events: auto; }
+.foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s4);
+  font-size: var(--text-sm);
+  letter-spacing: .08em;
+  color: var(--ink-3);
+}
+.foot p { margin: 0; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1020px) {
+  .deck-row { grid-template-columns: 1fr; gap: var(--s5); }
+  .deck-nav {
+    position: sticky;
+    top: var(--s8);
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--s2);
+    padding: var(--s2) 0;
+    background: oklch(99% 0.012 195 / 0.86);
+    z-index: 5;
+  }
+  .deck-nav .camp { padding: var(--s1) var(--s3) var(--s1) var(--s1); }
+  .deck-nav .camp .dot { width: 34px; }
+  .deck-nav .camp .label { font-size: var(--text-xs); letter-spacing: .12em; text-indent: .12em; }
+  /* 窄屏营地栏挪到内容上方横排，波浪线就没有「左侧标签」可引了，直接收掉 */
+  .panel .lead,
+  .panel .lead-plane { display: none; }
+  .rail.grid { --cols: 3; }
+}
+
+@media (max-width: 640px) {
+  .wrap { padding: 0 var(--s5); }
+  .nav-inner { height: 56px; }
+  .foot { flex-direction: column; gap: var(--s1); }
+
+  .peak { min-height: 0; padding: var(--s7) 0 var(--s8); }
+  .camp .label { display: none; }
+  .mt-legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--s2) var(--s5);
+    margin-top: var(--s5);
+    font-size: var(--text-sm);
+    letter-spacing: .18em;
+    color: var(--ink-2);
+  }
+  .mt-legend button {
+    font: inherit;
+    font-size: var(--text-sm);
+    letter-spacing: .18em;
+    color: var(--ink-2);
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: var(--s1) var(--s2);
+    transition: color .25s var(--ease);
+  }
+  .mt-legend button:hover { color: var(--accent-deep); }
+
+  .rail.grid { --cols: 2; }
+}
+
+/* ---------- 减少动效 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .fade { animation: none; }
+  .camp .dot, .camp .label { opacity: 1; animation: none; }
+  .peak, .deck { transition: none; }
+  .panel.is-on { animation: none; }
+  .panel.leaving { animation: none; }
+  .card { opacity: 1; transform: none; transition: none; }
+  .card-inner { transition: box-shadow .3s var(--ease), border-color .3s var(--ease); }
+  .card:hover .card-inner { --lift: 0px; }
+}

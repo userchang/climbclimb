@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>爬爬顶小站</title>
+<meta name="description" content="爬爬顶小站 —— 一个堆放各种做着玩的东西的地方。没有 KPI，纯粹因为好玩。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="爬爬顶小站">
+<meta property="og:description" content="爬爬顶小站 —— 一个堆放各种做着玩的东西的地方。没有 KPI，纯粹因为好玩。">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<a class="skip" href="#main">跳到主要内容</a>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">爬爬顶小站</a>
+    <button class="nav-back" id="nav-back" type="button" hidden>回到首页</button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- 首页：域名 + 一座可以点的山 -->
+  <section class="peak" id="top">
+    <div class="wrap">
+      <h1 class="peak-mark fade">climbclimb.top</h1>
+
+      <div class="mt fade" id="mt">
+        <svg class="mt-svg" viewBox="0 0 900 420" fill="none" aria-hidden="true">
+          <path class="mt-body" d="M40 392 L170 340 L330 292 L430 232 L560 200 L700 120 L860 62 L900 62 L900 420 L40 420 Z"/>
+          <path class="mt-ridge" d="M40 392 L170 340 L330 292 L430 232 L560 200 L700 120 L860 62"/>
+          <path class="mt-line" d="M860 62 V16"/>
+          <path class="mt-line" d="M860 20 L894 31 L860 42"/>
+          <circle class="mt-line" cx="122" cy="98" r="19"/>
+          <path class="mt-line" d="M122 66 V58 M122 138 V146 M87 98 H79 M157 98 H165"/>
+          <path class="mt-line" d="M296 152 c 10 -13 27 -13 37 0 c 12 -9 29 -3 31 10"/>
+          <path class="mt-line" d="M598 96 c 8 -11 23 -11 31 0 c 10 -7 25 -2 27 9"/>
+          <path class="mt-line" d="M640 372 c 14 -6 22 -6 36 0 M676 392 c 12 -5 20 -5 32 0"/>
+        </svg>
+
+        <button class="camp" type="button" data-go="work" style="--x:18.9%;--y:81%">
+          <span class="dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 20 L12 5 L21 20 Z"/><path d="M3 20 H21"/><path d="M12 5 V20"/>
+            </svg>
+          </span>
+          <span class="label">作品</span>
+        </button>
+        <button class="camp" type="button" data-go="doing" style="--x:36.7%;--y:68%">
+          <span class="dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 C9 7.5 10.5 11.5 12 13.5 C13.5 11.5 15 7.5 12 3 Z"/><path d="M5 18 L19 21 M19 18 L5 21"/>
+            </svg>
+          </span>
+          <span class="label">在做</span>
+        </button>
+        <button class="camp" type="button" data-go="trace" style="--x:55.6%;--y:51%">
+          <span class="dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="10" cy="16" rx="3.4" ry="4.6"/><circle cx="10" cy="7" r="2"/>
+              <ellipse cx="18.5" cy="11" rx="2.4" ry="3.2"/>
+            </svg>
+          </span>
+          <span class="label">痕迹</span>
+        </button>
+        <button class="camp" type="button" data-go="me" style="--x:76.7%;--y:30%">
+          <span class="dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 21 V4"/><path d="M7 5 L19 9 L7 13"/>
+            </svg>
+          </span>
+          <span class="label">我</span>
+        </button>
+      </div>
+
+      <nav class="mt-legend" aria-label="楼层导航">
+        <button type="button" data-go="work">作品</button>
+        <button type="button" data-go="doing">在做</button>
+        <button type="button" data-go="trace">痕迹</button>
+        <button type="button" data-go="me">我</button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- 层视图：营地标签飞到左边，内容在右边 -->
+  <div class="deck" id="deck" hidden>
+    <div class="wrap deck-row">
+      <aside class="deck-nav" id="deck-nav" aria-label="切换楼层"></aside>
+
+      <div class="deck-body">
+
+        <section class="panel" id="work">
+          <h2 class="sr-only">作品</h2>
+          <div class="rail-bar">
+            <div class="chips">
+              <button class="chip is-on" type="button" data-cat="all">全部</button>
+              <button class="chip" type="button" data-cat="game">游戏</button>
+              <button class="chip" type="button" data-cat="tool">工具</button>
+              <button class="chip" type="button" data-cat="misc">其他</button>
+            </div>
+            <div class="rail-nav">
+              <button class="icon-btn" id="view-toggle" type="button" aria-label="切换为陈列模式" title="切换陈列 / 轨道">
+                <svg class="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+                <svg class="i-rail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="7" width="4" height="10" rx="1.5"/><rect x="10" y="5" width="4" height="14" rx="1.5"/><rect x="17" y="7" width="4" height="10" rx="1.5"/></svg>
+              </button>
+              <button class="icon-btn" id="rail-prev" type="button" aria-label="往前">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+              </button>
+              <button class="icon-btn" id="rail-next" type="button" aria-label="往后">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="rail" id="rail">
+            <article class="card" data-cat="game">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品一</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 游戏</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="tool">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品二</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 工具</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="misc">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品三</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 其他</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="game">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品四</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 游戏</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="tool">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品五</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 工具</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="misc">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品六</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 其他</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="game">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品七</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 游戏</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="tool">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品八</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 工具</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="misc">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品九</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 其他</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="game">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品十</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 游戏</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="tool">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品十一</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 工具</span>
+                </div>
+              </div>
+            </article>
+            <article class="card" data-cat="misc">
+              <div class="card-inner">
+                <div class="thumb"><span>占位图</span></div>
+                <div class="card-body">
+                  <h3>作品十二</h3>
+                  <p>一句话说说这是什么，为什么做，或者做完的感受。</p>
+                  <span class="stamp">2026 · 其他</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <p class="empty" id="empty" hidden>这个格子还空着，等手痒了再来填。</p>
+        </section>
+
+        <section class="panel" id="doing">
+          <svg class="lead" viewBox="0 0 160 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path vector-effect="non-scaling-stroke" d="M3 15 C 30 10 54 18 80 13 C 106 8 128 14 157 12"/>
+          </svg>
+          <svg class="lead-plane" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M2 10.6 L18 7.6 L10.6 17 L9.7 12.3 Z"/>
+            <path d="M9.7 12.3 L2 10.6"/>
+          </svg>
+          <h2 class="sr-only">在做</h2>
+          <div class="grid-sm">
+            <article class="card card-sm">
+              <div class="card-inner">
+                <div class="card-body">
+                  <h3>在做一个</h3>
+                  <p>正在折腾的东西，写一句进度或者卡在哪儿。</p>
+                </div>
+              </div>
+            </article>
+            <article class="card card-sm">
+              <div class="card-inner">
+                <div class="card-body">
+                  <h3>在做两个</h3>
+                  <p>正在学的东西，随手记一句心得。</p>
+                </div>
+              </div>
+            </article>
+            <article class="card card-sm">
+              <div class="card-inner">
+                <div class="card-body">
+                  <h3>在做三个</h3>
+                  <p>在读或在想的，随便写点什么。</p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel" id="trace">
+          <svg class="lead" viewBox="0 0 160 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path vector-effect="non-scaling-stroke" d="M3 15 C 30 10 54 18 80 13 C 106 8 128 14 157 12"/>
+          </svg>
+          <svg class="lead-plane" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M2 10.6 L18 7.6 L10.6 17 L9.7 12.3 Z"/>
+            <path d="M9.7 12.3 L2 10.6"/>
+          </svg>
+          <h2 class="sr-only">痕迹</h2>
+          <ul class="trace-list">
+            <li>
+              <span class="seed" aria-hidden="true"></span>
+              <p class="year">2026</p>
+              <h3>折腾了点什么</h3>
+              <p>不是履历，就是记一下那年手痒做了什么。</p>
+            </li>
+            <li>
+              <span class="seed" aria-hidden="true"></span>
+              <p class="year">2025</p>
+              <h3>又折腾了点什么</h3>
+              <p>一句话，想到什么写什么。</p>
+            </li>
+            <li>
+              <span class="seed" aria-hidden="true"></span>
+              <p class="year">2024</p>
+              <h3>开始的开始</h3>
+              <p>第一次觉得做着玩也值得放上来。</p>
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel" id="me">
+          <svg class="lead" viewBox="0 0 160 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path vector-effect="non-scaling-stroke" d="M3 15 C 30 10 54 18 80 13 C 106 8 128 14 157 12"/>
+          </svg>
+          <svg class="lead-plane" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M2 10.6 L18 7.6 L10.6 17 L9.7 12.3 Z"/>
+            <path d="M9.7 12.3 L2 10.6"/>
+          </svg>
+          <h2 class="sr-only">我</h2>
+          <ul class="links">
+            <li><span>Bilibili</span><a href="https://space.bilibili.com/000000">space.bilibili.com/000000</a></li>
+          </ul>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer hidden>
+  <div class="wrap foot">
+    <p>&copy; <span id="year">2026</span> 爬爬顶小站</p>
+    <p>用爱发电，随缘更新</p>
+  </div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
