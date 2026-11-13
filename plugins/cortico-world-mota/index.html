@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>50层魔塔 · 爬爬顶小站</title>
+<meta name="description" content="50层魔塔 —— Coopanion 桌宠的 HTML5 魔塔 World 插件：让桌宠自主游玩经典 50 层魔塔并汇报战况。">
+<link rel="stylesheet" href="../../assets/css/style.css">
+<style>
+  .plugin-page { max-width: 760px; margin: 0 auto; padding: var(--s8) var(--s4) var(--s9); }
+  .plugin-head { display: flex; align-items: center; gap: var(--s4); margin-bottom: var(--s5); }
+  .plugin-head img { width: 56px; height: 56px; }
+  .plugin-head h1 { font-family: var(--font-display); font-size: var(--text-lg); margin: 0; }
+  .plugin-head .sub { color: var(--ink-3); font-size: var(--text-sm); }
+  .dl {
+    display: inline-block; padding: 10px 22px; border-radius: 999px;
+    background: var(--accent-deep); color: #fff; font-weight: 600;
+    box-shadow: var(--elev-2); transition: transform .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .dl:hover { transform: translateY(-2px); box-shadow: var(--elev-3); }
+  .plugin-page section { background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: var(--s5); margin-top: var(--s5); box-shadow: var(--elev-1); }
+  .plugin-page h2 { font-size: 1rem; margin: 0 0 var(--s3); color: var(--accent-deep); }
+  .plugin-page ul, .plugin-page ol { margin: 0; padding-left: 1.4em; }
+  .plugin-page li { margin-bottom: var(--s1); }
+  .plugin-page code { background: oklch(95% 0.02 200); border-radius: 6px; padding: 1px 6px;
+    font-size: var(--text-sm); }
+  .back { display: inline-block; margin-bottom: var(--s5); color: var(--ink-3); font-size: var(--text-sm); }
+  .back:hover { color: var(--accent-deep); }
+</style>
+</head>
+<body>
+<main class="plugin-page">
+  <a class="back" href="/">← 回到爬爬顶小站</a>
+
+  <div class="plugin-head">
+    <img src="icon.png" alt="50层魔塔图标">
+    <div>
+      <h1>50层魔塔 <span class="sub">v0.1.34 · 2026-11-06（最新 v0.1.35）</span></h1>
+      <div class="sub">Coopanion 桌宠 World 插件 · npm: cortico-world-mota</div>
+    </div>
+  </div>
+
+  <a class="dl" href="https://www.npmjs.com/package/cortico-world-mota" target="_blank" rel="noopener">前往 npm 安装 / 查看包信息</a>
+  <p class="sub" style="margin-top:var(--s2)">源码：<a href="https://github.com/userchang/cortico-world-mota" target="_blank" rel="noopener" style="color:var(--accent-deep)">github.com/userchang/cortico-world-mota</a></p>
+
+  <section>
+    <h2>这是什么</h2>
+    <p>Coopanion 桌宠（Coo）的 HTML5 魔塔 World 插件（<code>h5魔塔（50层）</code>）：让 Coo 在本机经典 HTML5 魔塔里自己看地图、走格子、算战损、打怪与存读档，并在推塔过程中汇报战况或求助。理论上支持所有基于 HTML5 魔塔样板制作的经典魔塔及其衍生变体。</p>
+  </section>
+
+  <section>
+    <h2>功能</h2>
+    <ul>
+      <li>信息感知：<code>mota_status</code> 状态、<code>mota_map</code> 楼层地图与可达性、<code>mota_battle</code> 战斗预估、<code>mota_screenshot</code> 截图、<code>mota_resources</code> 全塔剩余物资</li>
+      <li>移动与交互：连续走格、自动瞬移或寻路到目标坐标、飞行器跳层，以及剧情对话与选项处理</li>
+      <li>存读档保护：支持查看/保存/读取手动与自动存档，默认不覆盖已有占用槽位</li>
+      <li>陪伴推塔：支持开启「主动推塔」与阶段战况汇报，卡关时主动向主人求助</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>安装与连接</h2>
+    <ol>
+      <li>安装插件：<code>npm install cortico-world-mota</code>，或在 Coopanion「扩展」页选择插件目录安装为 World 并启用</li>
+      <li>打开 World 设置的「游戏连接」，点击 <strong>生成并保存令牌</strong></li>
+      <li>点击 <strong>下载 coopanion.js</strong> 放进魔塔游戏目录的 <code>extensions/</code> 文件夹，再按需更新 <code>src/game-adapter.js</code></li>
+      <li>刷新本地魔塔页面（默认 <code>http://127.0.0.1:1055</code>），连接成功后即可开始</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>需要什么 &amp; 注意事项</h2>
+    <ul>
+      <li>Node.js 22+、Coopanion（Cortico world API 6）以及本地运行的 HTML5 魔塔（默认桥接端口 <code>127.0.0.1:1060</code>）</li>
+      <li>高消耗提醒：开启「主动推塔」后（默认每 60 秒唤醒）Token 消耗较大，建议搭配高性价比模型，不玩时关闭主动推塔</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

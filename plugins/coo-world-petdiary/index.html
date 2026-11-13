@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>桌宠日记 · 爬爬顶小站</title>
+<meta name="description" content="桌宠日记 —— Coopanion 桌宠的日记 World 插件：公开/私密双日记本、分类、浏览页、审计链与睡前检查闹钟对齐。">
+<link rel="stylesheet" href="../../assets/css/style.css">
+<style>
+  .plugin-page { max-width: 760px; margin: 0 auto; padding: var(--s8) var(--s4) var(--s9); }
+  .plugin-head { display: flex; align-items: center; gap: var(--s4); margin-bottom: var(--s5); }
+  .plugin-head img { width: 56px; height: 56px; }
+  .plugin-head h1 { font-family: var(--font-display); font-size: var(--text-lg); margin: 0; }
+  .plugin-head .sub { color: var(--ink-3); font-size: var(--text-sm); }
+  .dl {
+    display: inline-block; padding: 10px 22px; border-radius: 999px;
+    background: var(--accent-deep); color: #fff; font-weight: 600;
+    box-shadow: var(--elev-2); transition: transform .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .dl:hover { transform: translateY(-2px); box-shadow: var(--elev-3); }
+  .plugin-page section { background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    padding: var(--s5); margin-top: var(--s5); box-shadow: var(--elev-1); }
+  .plugin-page h2 { font-size: 1rem; margin: 0 0 var(--s3); color: var(--accent-deep); }
+  .plugin-page ul, .plugin-page ol { margin: 0; padding-left: 1.4em; }
+  .plugin-page li { margin-bottom: var(--s1); }
+  .plugin-page code { background: oklch(95% 0.02 200); border-radius: 6px; padding: 1px 6px;
+    font-size: var(--text-sm); }
+  .back { display: inline-block; margin-bottom: var(--s5); color: var(--ink-3); font-size: var(--text-sm); }
+  .back:hover { color: var(--accent-deep); }
+</style>
+</head>
+<body>
+<main class="plugin-page">
+  <a class="back" href="/">← 回到爬爬顶小站</a>
+
+  <div class="plugin-head">
+    <img src="icon.svg" alt="桌宠日记图标">
+    <div>
+      <h1>桌宠日记 <span class="sub">v0.3.4 · 2026-10-30（最新 v0.3.7）</span></h1>
+      <div class="sub">Coopanion 桌宠 World 插件 · npm: coo-world-petdiary</div>
+    </div>
+  </div>
+
+  <a class="dl" href="https://www.npmjs.com/package/coo-world-petdiary" target="_blank" rel="noopener">前往 npm 安装 / 查看包信息</a>
+  <p class="sub" style="margin-top:var(--s2)">源码：<a href="https://github.com/userchang/coo-world-petdiary" target="_blank" rel="noopener" style="color:var(--accent-deep)">github.com/userchang/coo-world-petdiary</a></p>
+
+  <section>
+    <h2>这是什么</h2>
+    <p>Coopanion 桌宠（Coo）的日记 World 插件：让 Coo 用 <code>diary_append</code> 直接写日记，用户在扩展面板里按公开本 / 私密本回看，并可一键构建对外静态分享页。底层解析、入库、审计链与条目指纹校验由独立 Python 后端（仅标准库，无第三方依赖）完成。</p>
+  </section>
+
+  <section>
+    <h2>功能</h2>
+    <ul>
+      <li>公开本 / 私密本双册管理：<code>public</code> 可进入对外分享页，<code>private</code> 仅自留</li>
+      <li>支持日常 / 心情 / 想法 / 计划 / 健康 / 游戏 / 交际分类标签，留空按关键词推断</li>
+      <li>三区浏览面板：最近条目、今日写作状态、各册与审计计数，支持一键生成静态浏览页</li>
+      <li>只追加审计链与条目指纹完整性校验，删除同样写留痕审计</li>
+      <li>睡前检查时刻可配置（<code>bedtimeCheck</code>），改动后提醒 Coo 对齐「睡前检查」闹钟</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>安装</h2>
+    <ol>
+      <li>在 Coo 扩展目录安装（或直接在扩展页安装）：<code>npm install coo-world-petdiary</code></li>
+      <li>在 Coopanion 扩展配置中启用 <code>worlds.pet-diary</code>，默认配置全部留空即可开箱即用</li>
+      <li>Windows 包内自带嵌入式 Python 与后端脚本，首次打开面板或调用工具会自动初始化默认日记库</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>需要什么</h2>
+    <ul>
+      <li>Node.js 22+ 与 Coopanion（Cortico world API 6）</li>
+      <li>Windows 无需额外装 Python；非 Windows 平台需系统 PATH 中有 Python 3.8+</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>
